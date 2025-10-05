@@ -9,7 +9,7 @@ from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(_name)  # FIXED: Changed _name to _name_
 
 # API Keys (from environment variable on Render)
 API_KEYS = os.getenv("API_KEYS", "X7pL9qW3zT2rY8mN5kV0jF6hB").split(",")
@@ -44,7 +44,7 @@ def require_api_key(f):
     return decorated
 
 def fetch_from_github():
-    """Fetch data from GitHub Pages with 5-minute caching"""
+    """Fetch data from GitHub Pages with 10-minute caching"""
     global last_fetch_time, cached_data, cache_hits, cache_misses
     
     current_time = time.time()
