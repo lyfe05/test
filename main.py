@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template_string
 import requests
 import os
 import time
 import logging
 from datetime import datetime
+import base64
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -21,6 +23,31 @@ cache_hits = 0
 cache_misses = 0
 
 app = Flask(__name__)
+
+# Your custom encoding function
+def custom_encode(input_string):
+    charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef'
+    input_bytes = input_string.encode('utf-8')
+    output = []
+    bit_buffer = 0
+    bit_count = 0
+    
+    for byte in input_bytes:
+        bit_buffer = (bit_buffer << 8) | byte
+        bit_count += 8
+        while bit_count >= 5:
+            bit_count -= 5
+            value = (bit_buffer >> bit_count) & 0x1F
+            output.append(charset[value])
+            bit_buffer &= (1 << bit_count) - 1
+    
+    if bit_count > 0:
+        bit_buffer <<= (5 - bit_count)
+        value = bit_buffer & 0x1F
+        output.append(charset[value])
+        output.append('=')
+    
+    return ''.join(output)
 
 def fetch_from_github():
     """Fetch data from GitHub Pages with 10-minute caching"""
@@ -66,7 +93,8 @@ def root():
         "cache_duration": "10 minutes",
         "endpoints": {
             "health": "/health",
-            "matches": "/matches"
+            "matches": "/matches",
+            "encoded": "/encoded"
         }
     })
 
@@ -127,8 +155,42 @@ def get_matches():
             "timestamp": datetime.now().isoformat()
         }), 503
 
+@app.route('/encoded')
+def get_encoded_matches():
+    """Get encoded football matches data"""
+    try:
+        data = fetch_from_github()
+        
+        # Convert to JSON string and encode
+        json_string = json.dumps(data)
+        encoded_data = custom_encode(json_string)
+        
+        cache_age = int(time.time() - last_fetch_time)
+        logger.info(f"🔐 Encoded API request | Cache: {cache_age}s")
+        
+        return jsonify({
+            "success": True,
+            "last_updated": data.get('last_updated'),
+            "matches_count": data.get('matches_count', 0),
+            "cache_info": {
+                "age_seconds": cache_age,
+                "max_age_seconds": CACHE_DURATION
+            },
+            "encoded_data": encoded_data,
+            "original_length": len(json_string),
+            "encoded_length": len(encoded_data)
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Encoding error: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to encode matches data",
+            "timestamp": datetime.now().isoformat()
+        }), 503
+
 # Startup message
-logger.info("🚀 Starting Football Matches API (No Auth)...")
+logger.info("🚀 Starting Football Matches API (With Encoding)...")
 logger.info(f"📡 Source: {GITHUB_JSON_URL}")
 logger.info(f"💾 Cache: {CACHE_DURATION} seconds (10 minutes)")
 
