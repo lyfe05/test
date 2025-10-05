@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(_name_)
 
 # API Keys (from environment variable on Render)
-API_KEYS = os.getenv("API_KEYS", "football_proxy_2025_secure_key").split(",")
+API_KEYS = os.getenv("API_KEYS", "X7pL9qW3zT2rY8mN5kV0jF6hB").split(",")
 
 # GitHub Pages JSON URL
 GITHUB_JSON_URL = "https://lyfe05.github.io/highlight-api/matches.json"
