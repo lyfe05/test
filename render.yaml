@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: football-proxy-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: API_KEYS
+        value: X7pL9qW3zT2rY8mN5kV0jF6hB
+    healthCheckPath: /health
