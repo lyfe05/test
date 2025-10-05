@@ -9,7 +9,7 @@ from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(____name____)  # FIXED: ___name__ with double underscores
+logger = logging.getLogger(__name__)  # FIXED: ___name__ with double underscores
 
 # API Keys (from environment variable on Render)
 API_KEYS = os.getenv("API_KEYS", "X7pL9qW3zT2rY8mN5kV0jF6hB").split(",")
