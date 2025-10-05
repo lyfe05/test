@@ -9,7 +9,7 @@ from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(_name)  # FIXED: Changed _name to _name_
+logger = logging.getLogger(____name____)  # FIXED: ___name__ with double underscores
 
 # API Keys (from environment variable on Render)
 API_KEYS = os.getenv("API_KEYS", "X7pL9qW3zT2rY8mN5kV0jF6hB").split(",")
@@ -24,7 +24,7 @@ cached_data = None
 cache_hits = 0
 cache_misses = 0
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 def require_api_key(f):
     @wraps(f)
@@ -158,7 +158,7 @@ logger.info(f"🔑 API Keys configured: {len(API_KEYS)}")
 logger.info(f"📡 Source: {GITHUB_JSON_URL}")
 logger.info(f"💾 Cache: {CACHE_DURATION} seconds (10 minutes)")
 
-if _name_ == "_main_":
+if __name__ == "_main_":
     port = int(os.getenv("PORT", 8000))
     logger.info(f"🌐 Starting Flask server on port {port}")
     app.run(host="0.0.0.0", port=port, debug=False)
