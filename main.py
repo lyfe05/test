@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from flask import Flask, jsonify, request
-from functools import wraps
 import requests
 import os
 import time
@@ -9,10 +8,7 @@ from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)  # FIXED: ___name__ with double underscores
-
-# API Keys (from environment variable on Render)
-API_KEYS = os.getenv("API_KEYS", "X7pL9qW3zT2rY8mN5kV0jF6hB").split(",")
+logger = logging.getLogger(__name__)
 
 # GitHub Pages JSON URL
 GITHUB_JSON_URL = "https://lyfe05.github.io/highlight-api/matches.json"
@@ -25,23 +21,6 @@ cache_hits = 0
 cache_misses = 0
 
 app = Flask(__name__)
-
-def require_api_key(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        api_key = request.headers.get('Authorization')
-        if not api_key:
-            return jsonify({"error": "API key required"}), 401
-        
-        # Remove 'Bearer ' prefix if present
-        if api_key.startswith('Bearer '):
-            api_key = api_key[7:]
-        
-        if api_key not in API_KEYS:
-            return jsonify({"error": "Invalid API key"}), 401
-        
-        return f(*args, **kwargs)
-    return decorated
 
 def fetch_from_github():
     """Fetch data from GitHub Pages with 10-minute caching"""
@@ -74,14 +53,14 @@ def fetch_from_github():
         # Return cached data even if expired as fallback
         if cached_data:
             cache_age = int(current_time - last_fetch_time)
-            logger.warning(f"⚠ Using expired cache as fallback ({cache_age}s old)")
+            logger.warning(f"⚠️ Using expired cache as fallback ({cache_age}s old)")
             return cached_data
         raise
 
 @app.route('/')
 def root():
     return jsonify({
-        "message": "Football Matches Proxy API", 
+        "message": "Football Matches API", 
         "status": "running",
         "source": "GitHub Pages",
         "cache_duration": "10 minutes",
@@ -121,17 +100,13 @@ def health_check():
         }), 503
 
 @app.route('/matches')
-@require_api_key
 def get_matches():
-    """Get all football matches with streams (API key required)"""
+    """Get all football matches with streams (NO API key required)"""
     try:
         data = fetch_from_github()
         
-        # Log API usage
-        api_key = request.headers.get('Authorization', '')[:8] + '...'
         cache_age = int(time.time() - last_fetch_time)
-        
-        logger.info(f"🔑 API request from {api_key} | Cache: {cache_age}s")
+        logger.info(f"📡 API request received | Cache: {cache_age}s")
         
         return jsonify({
             "success": True,
@@ -153,12 +128,11 @@ def get_matches():
         }), 503
 
 # Startup message
-logger.info("🚀 Starting Football Matches Proxy API...")
-logger.info(f"🔑 API Keys configured: {len(API_KEYS)}")
+logger.info("🚀 Starting Football Matches API (No Auth)...")
 logger.info(f"📡 Source: {GITHUB_JSON_URL}")
 logger.info(f"💾 Cache: {CACHE_DURATION} seconds (10 minutes)")
 
-if __name__ == "_main_":
+if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     logger.info(f"🌐 Starting Flask server on port {port}")
     app.run(host="0.0.0.0", port=port, debug=False)
